@@ -3,7 +3,8 @@ import os
 from datetime import date
 from pathlib import Path
 
-import google.generativeai as genai
+from google import genai
+from google.genai import types
 from dotenv import load_dotenv
 from pypdf import PdfReader
 
@@ -14,22 +15,21 @@ logger = logging.getLogger(__name__)
 RESUME_PATH = Path(__file__).parent.parent / "public" / "files" / "Venkata_Sandeep_Macha_Portfolio_Resume.pdf"
 
 _resume_text = None
-_model = None
+_client = None
 
 
 def _setup():
-    global _resume_text, _model
-    genai.configure(api_key=os.environ["GOOGLE_API_KEY"])
+    global _resume_text, _client
+    _client = genai.Client(api_key=os.environ["GOOGLE_API_KEY"])
     reader = PdfReader(str(RESUME_PATH))
     _resume_text = "\n".join(page.extract_text() or "" for page in reader.pages)
-    _model = genai.GenerativeModel("gemini-3.5-flash-lite")
     logger.info("Resume loaded: %d chars", len(_resume_text))
 
 
 def get_chain():
-    if _model is None:
+    if _client is None:
         _setup()
-    return _model
+    return _client
 
 
 SYSTEM_PROMPT = """You are Sandeep Macha's personal AI assistant on his portfolio website. The resume below is your only source of truth — read it carefully before answering. Speak AS Sandeep in first person — "I build...", "I've worked on...", "My experience is..." — like he is right there talking to the visitor. Sound like a sharp engineer having a real conversation: confident, specific, and natural. No bullet points. No generic filler.
@@ -48,9 +48,17 @@ Rules:
 def run_chain(question: str) -> str:
     get_chain()
     today = date.today().strftime("%B %d, %Y")
-    prompt = SYSTEM_PROMPT + f"\n\nToday's date: {today}. Use this to determine whether resume dates are past or future.\n\nRESUME:\n" + _resume_text + "\n\nQuestion: " + question + "\nAnswer:"
-    response = _model.generate_content(
-        prompt,
-        generation_config=genai.GenerationConfig(temperature=0.3),
+    prompt = (
+        SYSTEM_PROMPT
+        + f"\n\nToday's date: {today}. Use this to determine whether resume dates are past or future.\n\nRESUME:\n"
+        + _resume_text
+        + "\n\nQuestion: "
+        + question
+        + "\nAnswer:"
+    )
+    response = _client.models.generate_content(
+        model="gemini-3.5-flash-lite",
+        contents=prompt,
+        config=types.GenerateContentConfig(temperature=0.3),
     )
     return response.text
