@@ -39,8 +39,10 @@ app.add_middleware(
         "http://localhost:5173",
         "http://localhost:4173",
         "http://127.0.0.1:5173",
+        "https://portfolio-roan-alpha-99.vercel.app",
+        "https://portfolio-flax-omega-f42xorshdb.vercel.app",
     ],
-    allow_methods=["POST", "GET"],
+    allow_methods=["POST", "GET", "OPTIONS"],
     allow_headers=["*"],
 )
 
