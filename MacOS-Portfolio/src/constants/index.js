@@ -245,7 +245,7 @@ const WORK_LOCATION = {
         {
           id: 4,
           name: "invoice-generator.png",
-          icon: "/images/image.png",
+          icon: "/images/project-1.png",
           kind: "file",
           fileType: "img",
           position: "top-52 right-80",
