@@ -3,9 +3,9 @@ import os
 from datetime import date
 from pathlib import Path
 
+from dotenv import load_dotenv
 from google import genai
 from google.genai import types
-from dotenv import load_dotenv
 from pypdf import PdfReader
 
 load_dotenv()
@@ -20,7 +20,12 @@ _client = None
 
 def _setup():
     global _resume_text, _client
-    _client = genai.Client(api_key=os.environ["GOOGLE_API_KEY"])
+
+    api_key = os.environ.get("GOOGLE_API_KEY")
+    if not api_key:
+        raise RuntimeError("GOOGLE_API_KEY is not set.")
+
+    _client = genai.Client(api_key=api_key)
     reader = PdfReader(str(RESUME_PATH))
     _resume_text = "\n".join(page.extract_text() or "" for page in reader.pages)
     logger.info("Resume loaded: %d chars", len(_resume_text))
@@ -57,7 +62,7 @@ def run_chain(question: str) -> str:
         + "\nAnswer:"
     )
     response = _client.models.generate_content(
-        model="gemini-3.5-flash-lite",
+        model="gemini-2.5-flash",
         contents=prompt,
         config=types.GenerateContentConfig(temperature=0.3),
     )

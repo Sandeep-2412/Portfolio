@@ -341,15 +341,6 @@ const WORK_LOCATION = {
         },
         {
           id: 2,
-          name: "food-delivery-app.com",
-          icon: "/images/safari.png",
-          kind: "file",
-          fileType: "url",
-          href: "https://youtu.be/LKrX390fJMw?si=cExkuVhf2DTV9G2-",
-          position: "top-10 right-20",
-        },
-        {
-          id: 4,
           name: "food-delivery-app.png",
           icon: "/images/image.png",
           kind: "file",
@@ -358,7 +349,7 @@ const WORK_LOCATION = {
           imageUrl: "/images/project-3.png",
         },
         {
-          id: 5,
+          id: 3,
           name: "Design.fig",
           icon: "/images/plain.png",
           kind: "file",

@@ -1,6 +1,7 @@
 fastapi
 uvicorn[standard]
 python-dotenv
-google-genai
+openai
 pypdf
 slowapi
+google-genai
