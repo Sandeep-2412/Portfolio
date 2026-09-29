@@ -4,8 +4,7 @@ from datetime import date
 from pathlib import Path
 
 from dotenv import load_dotenv
-from google import genai
-from google.genai import types
+from openai import OpenAI
 from pypdf import PdfReader
 
 load_dotenv()
@@ -21,11 +20,14 @@ _client = None
 def _setup():
     global _resume_text, _client
 
-    api_key = os.environ.get("GOOGLE_API_KEY")
+    api_key = os.environ.get("NVIDIA_API_KEY")
     if not api_key:
-        raise RuntimeError("GOOGLE_API_KEY is not set.")
+        raise RuntimeError("NVIDIA_API_KEY is not set.")
 
-    _client = genai.Client(api_key=api_key)
+    _client = OpenAI(
+        api_key=api_key,
+        base_url="https://integrate.api.nvidia.com/v1",
+    )
     reader = PdfReader(str(RESUME_PATH))
     _resume_text = "\n".join(page.extract_text() or "" for page in reader.pages)
     logger.info("Resume loaded: %d chars", len(_resume_text))
@@ -53,17 +55,16 @@ Rules:
 def run_chain(question: str) -> str:
     get_chain()
     today = date.today().strftime("%B %d, %Y")
-    prompt = (
-        SYSTEM_PROMPT
-        + f"\n\nToday's date: {today}. Use this to determine whether resume dates are past or future.\n\nRESUME:\n"
-        + _resume_text
-        + "\n\nQuestion: "
-        + question
-        + "\nAnswer:"
+    user_prompt = (
+        f"Today's date: {today}. Use this to determine whether resume dates are past or future.\n\n"
+        f"RESUME:\n{_resume_text}\n\nQuestion: {question}\nAnswer:"
     )
-    response = _client.models.generate_content(
-        model="gemini-2.5-flash",
-        contents=prompt,
-        config=types.GenerateContentConfig(temperature=0.3),
+    response = _client.chat.completions.create(
+        model="google/diffusiongemma-26b-a4b-it",
+        messages=[
+            {"role": "system", "content": SYSTEM_PROMPT},
+            {"role": "user", "content": user_prompt},
+        ],
+        temperature=0.3,
     )
-    return response.text
+    return response.choices[0].message.content or ""
